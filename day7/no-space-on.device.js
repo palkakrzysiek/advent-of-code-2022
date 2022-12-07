@@ -63,7 +63,6 @@ const parseInput = lines => {
     }
   )
   parseCd('$ cd /', state)
-  console.log(state)
   return state
 }
 
@@ -71,15 +70,22 @@ const countDirSizes = (state, acc) => {
   const currentFilesSize = _.sum(Object.values(state['files']))
   const childrenFilesSize = Object.values(state['children']).map(child => countDirSizes(child, acc))
   const totalSize = currentFilesSize + _.sum(childrenFilesSize)
-  acc[state['name']] = totalSize
+  acc.push(totalSize)
   return totalSize
 }
 
 const part1 = data => {
-  const dirSizesAcc = {}
-  countDirSizes(parseInput(splitInputLines(data)), dirSizesAcc)
-  return _.sum(Object.values(dirSizesAcc).filter(size => size <= 100000))
+  const sizes = []
+  countDirSizes(parseInput(splitInputLines(data)), sizes)
+  return _.sum(sizes.filter(size => size <= 100000))
+}
+
+const part2 = data => {
+  const sizes = []
+  const totalUsed = countDirSizes(parseInput(splitInputLines(data)), sizes)
+  const maxAllowedUsedSpace = 70000000 - 30000000
+  return sizes.sort((a, b) => a - b).find(value => totalUsed - value <= maxAllowedUsedSpace)
 }
 
 console.log(part1(data))
-
+console.log(part2(data))
