@@ -38,25 +38,7 @@ const parseDirection = direction => {
   }
 }
 
-
-const part1 = (moves) => {
-  const visitedPositions = new Set()
-  let head = position(0, 0)
-  let tail = position(0, 0)
-  visitedPositions.add(`${tail.x}:${tail.y}`)
-  moves.map(parseMove).forEach(move => {
-    const dir = parseDirection(move.direction)
-    for (let i = 0; i < move.steps; i++) {
-      head = position(head.x + dir.x, head.y + dir.y)
-      tail = movePointTowards(tail, head)
-      console.log(`${head.x}:${head.y}   |   ${tail.x}:${tail.y}`)
-      visitedPositions.add(`${tail.x}:${tail.y}`)
-    }
-  })
-  return visitedPositions.size
-}
-
-const part2 = (moves, ropeSize) => {
+const coveredPoints = (moves, ropeSize) => {
   const visitedPositions = new Set()
   const rope = [...Array(ropeSize)].map(() => position(0, 0))
   visitedPositions.add(`${rope[ropeSize-1].x}:${rope[ropeSize-1].y}`)
@@ -76,5 +58,8 @@ const part2 = (moves, ropeSize) => {
   return visitedPositions.size
 }
 
-console.log(part2(splitInputLines(data), 2))
-console.log(part2(splitInputLines(data), 10))
+const part1 = data => coveredPoints(splitInputLines(data), 2)
+const part2 = data => coveredPoints(splitInputLines(data), 10)
+
+console.log(part1(data))
+console.log(part2(data))
