@@ -5,74 +5,81 @@ const point = (x, y) => {
   return {x: x, y: y}
 }
 
+const allDirections = [point(0, 1), point(0, -1), point(1, 0), point(-1, 0)]
+
 const symbolHeight = symbol => symbol === 'S' ? 0 : symbol === 'E' ? 25 : symbol.charCodeAt(0) - 'a'.charCodeAt(0)
 
+const lowestDistanceFromSymbol = (map, startSymbol) => {
+  const maxY = map.length
+  const maxX = map[0].length
 
-const part1 = map => {
-  const maxY = map.length - 1
-  const maxX = map[0].length - 1
-  const findStartPoint = () => {
-    for (let y = 0; y <= maxY; y++)
-      for (let x = 0; x <= maxX; x++)
-        if (map[y][x] === 'S')
-          return point(x, y)
+  const findPointsWithSymbol = symbol => {
+    let points = []
+    for (let y = 0; y <= maxY - 1; y++)
+      for (let x = 0; x <= maxX - 1; x++)
+        if (map[y][x] === symbol)
+          points.push(point(x, y))
+    return points
   }
-  const height = (point) => symbolHeight(map[point.y][point.x])
+
   const canMove = (from, dir) => {
     const to = point(from.x + dir.x, from.y + dir.y)
-    if (to.x < 0 || to.x > maxX || to.y < 0 || to.y > maxY) return false
-    else return Math.abs(height(from) - height(to)) <= 1
+    if (to.x < 0 || to.x > maxX - 1 || to.y < 0 || to.y > maxY - 1) return false
+    else return  height(to) - height(from) <= 1
   }
-  const isPreferredMove = (from, dir) => {
-    if (!canMove(from, dir)) {
-      return false
-    } else {
-      const to = point(from.x + dir.x, from.y + dir.y)
-      return height(to) - height(from) === 1
-    }
+
+  const height = (point) => symbolHeight(map[point.y][point.x])
+
+  const mkVertices = () => {
+    const buffer = [...Array(maxY)].map(() => [...Array(maxX)].map(() => {
+      return {
+        distance: Infinity,
+        possibleMoves: [],
+        predecessor: null
+      }
+    }))
+    for (let y = 0; y <= maxY - 1; y++)
+      for (let x = 0; x <= maxX - 1; x++)
+        for (const direction of allDirections)
+          if (canMove(point(x, y), direction))
+            buffer[y][x].possibleMoves.push(buffer[y + direction.y][x + direction.x])
+    return buffer
   }
-  const allDirections = [point(0, 1), point(0, -1), point(1, 0), point(-1, 0)]
-  const moveUpwards = (from) => {
-    return allDirections.find(to => isPreferredMove(from, to))
-  }
-  const possiblePaths = []
-  let minPossibleLength = Infinity
-  const dfs = (position, visited) => {
-    if (visited.size >= minPossibleLength) {
-      return
+
+  const targetPoint = findPointsWithSymbol('E')[0]
+  const distanceToTarget = from => {
+    const vertices = mkVertices()
+    vertices[from.y][from.x].distance = 0
+
+    let queue = [vertices[from.y][from.x]]
+    const enqueue = vertex => {
+      queue.push(vertex)
+      queue = _.uniq(queue)
+      queue = queue.sort((a, b) => b.distance - a.distance)
     }
-    const currentPosStr = `${position.x}:${position.y}`
-    const newVisited = new Set(visited)
-    newVisited.add(currentPosStr)
-    const wasVisited = (dir) => visited.has(`${position.x + dir.x}:${position.y + dir.y}`)
-    const visitIfPossible = (to) => {
-      if (canMove(position, to) && !wasVisited(to))
-        dfs(point(position.x + to.x, position.y + to.y), newVisited)
-    }
-    if (map[position.y][position.x] === 'E') {
-      if (newVisited.size < minPossibleLength) {
-        minPossibleLength = newVisited.size
-        console.log(minPossibleLength)
-        possiblePaths.push(newVisited)
+
+    while (queue.length !== 0) {
+      const currentVertex = queue.pop()
+      for (let possibleMove of currentVertex.possibleMoves) {
+        if (currentVertex.distance + 1 < possibleMove.distance) {
+          possibleMove.distance = currentVertex.distance + 1
+          possibleMove.predecessor = currentVertex
+          enqueue(possibleMove)
+        }
       }
     }
-    else {
-      const preferredMove = moveUpwards(position)
-      if (preferredMove) {
-        visitIfPossible(preferredMove)
-        allDirections.filter(dir => dir.x !== preferredMove.x && dir.y !== preferredMove.y).forEach(visitIfPossible)
-      } else {
-        allDirections.forEach(visitIfPossible)
-      }
-    }
+    return vertices[targetPoint.y][targetPoint.x].distance
   }
-  const startPoint = findStartPoint()
-  dfs(startPoint, new Set())
-  console.log(possiblePaths)
-  console.log(_.min(possiblePaths.map(path => path.size)) - 1)
+
+  const startPoints = findPointsWithSymbol(startSymbol)
+  return _.min(startPoints.map(distanceToTarget))
 }
 
 const data = fs.readFileSync('input.txt', 'utf8')
 const splitInputLines = (input) => input.split('\n').filter(line => line !== '')
 
-part1(splitInputLines(data))
+const part1 = map => lowestDistanceFromSymbol(map, 'S')
+const part2 = map => lowestDistanceFromSymbol(map, 'a')
+
+console.log(part1(splitInputLines(data)))
+console.log(part2(splitInputLines(data)))
