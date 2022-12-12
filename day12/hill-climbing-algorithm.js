@@ -38,20 +38,20 @@ const part1 = map => {
   const possiblePaths = []
   let minPossibleLength = Infinity
   const dfs = (position, visited) => {
-    if (visited.length >= minPossibleLength) {
+    if (visited.size >= minPossibleLength) {
       return
     }
     const currentPosStr = `${position.x}:${position.y}`
-    const newVisited = [...visited]
-    newVisited.push(currentPosStr)
-    const wasVisited = (dir) => visited.includes(`${position.x + dir.x}:${position.y + dir.y}`)
+    const newVisited = new Set(visited)
+    newVisited.add(currentPosStr)
+    const wasVisited = (dir) => visited.has(`${position.x + dir.x}:${position.y + dir.y}`)
     const visitIfPossible = (to) => {
       if (canMove(position, to) && !wasVisited(to))
         dfs(point(position.x + to.x, position.y + to.y), newVisited)
     }
     if (map[position.y][position.x] === 'E') {
-      if (newVisited.length < minPossibleLength) {
-        minPossibleLength = newVisited.length
+      if (newVisited.size < minPossibleLength) {
+        minPossibleLength = newVisited.size
         console.log(minPossibleLength)
         possiblePaths.push(newVisited)
       }
@@ -67,19 +67,12 @@ const part1 = map => {
     }
   }
   const startPoint = findStartPoint()
-  dfs(startPoint, [])
+  dfs(startPoint, new Set())
   console.log(possiblePaths)
-  console.log(_.min(possiblePaths.map(path => path.length)) - 1)
+  console.log(_.min(possiblePaths.map(path => path.size)) - 1)
 }
 
 const data = fs.readFileSync('input.txt', 'utf8')
 const splitInputLines = (input) => input.split('\n').filter(line => line !== '')
 
 part1(splitInputLines(data))
-
-
-
-
-
-
-
