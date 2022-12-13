@@ -54,6 +54,27 @@ const part1 = pairs => {
   return correctCounter
 }
 
+const ordering = (a, b) => {
+  const result = isCorrect(_.cloneDeep(a), _.cloneDeep(b))
+  if (result === true) return -1
+  else if (result !== false) return 1
+  else return 0
+}
+
+const part2 = lines => {
+  const withDividers = lines.map(eval)
+  withDividers.push([[2]])
+  withDividers.push([[6]])
+  let decoderKey = 1
+  withDividers.sort(ordering).forEach((line, idx) => {
+    if (_.isEqual(line, [[2]]) || _.isEqual(line, [[6]])) {
+      decoderKey *= idx + 1
+    }
+  })
+  return decoderKey
+}
+
+
 const examples = [
   [[1], [1], '🤷'],
   [[1,1,3,1,1], [1,1,5,1,1], true],
@@ -65,6 +86,7 @@ const examples = [
   [[[[]]], [[]], false],
   [[1,[2,[3,[4,[5,6,7]]]],8,9], [1,[2,[3,[4,[5,6,0]]]],8,9], false]
 ]
+
 for (const [left, right, expected] of examples) {
   const result = isCorrect(_.cloneDeep(left), _.cloneDeep(right))
   console.assert(result === expected, `expected ${expected}, got ${result}`, left, right)
@@ -74,3 +96,5 @@ const exampleData = fs.readFileSync('input-example.txt', 'utf8')
 const inputData = fs.readFileSync('input.txt', 'utf8')
 console.log(part1(splitPairs(exampleData).map(splitInputLines)))
 console.log(part1(splitPairs(inputData).map(splitInputLines)))
+console.log(part2(splitInputLines(exampleData)))
+console.log(part2(splitInputLines(inputData)))
